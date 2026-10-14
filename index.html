@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TüpTakip — Yangın Tüpü Vade Takibi (Demo)</title>
+<meta name="description" content="Yangın söndürme tüpü dolum ve bakım firmaları için vade takibi, QR etiket ve WhatsApp hatırlatma. Demo.">
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --bg:#f5f6f8;--card:#fff;--ink:#16181d;--mute:#5d6470;--line:#e3e6eb;
+  --brand:#c62828;--brand-ink:#fff;--ok:#1e7d45;--ok-bg:#e6f4ec;--warn:#9a6200;--warn-bg:#fff4dc;
+  --late:#b3261e;--late-bg:#fdecea;--soon:#1d5fa8;--soon-bg:#e7f0fb;--wa:#1fa855;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:inherit}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bar{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+.logo i{width:26px;height:26px;border-radius:7px;background:var(--brand);display:inline-grid;place-items:center;color:#fff;font-style:normal;font-size:14px}
+.demo-tag{font-size:12px;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:99px;font-weight:600}
+nav{display:flex;gap:4px;overflow-x:auto;max-width:1080px;margin:0 auto;padding:0 16px 8px}
+nav button{border:0;background:none;padding:8px 12px;border-radius:8px;font:inherit;font-weight:600;color:var(--mute);cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--ink);color:#fff}
+main{max-width:1080px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 4px}h2{font-size:17px;margin:0 0 10px}
+.sub{color:var(--mute);margin:0 0 16px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi b{display:block;font-size:28px;line-height:1.1}
+.kpi span{color:var(--mute);font-size:13px}
+.kpi.late b{color:var(--late)}.kpi.warn b{color:var(--warn)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.b-late{background:var(--late-bg);color:var(--late)}.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-soon{background:var(--soon-bg);color:var(--soon)}.b-ok{background:var(--ok-bg);color:var(--ok)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.p{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.s{padding:5px 9px;font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.tw{overflow-x:auto}
+.cust{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.cust:last-child{border-bottom:0}
+.cust .info{flex:1;min-width:0}
+.cust .info b{display:block}
+@media(max-width:600px){
+  nav{flex-wrap:wrap;overflow:visible}
+  nav button{padding:6px 10px;font-size:14px}
+  .hm{display:none}
+  th,td{padding:8px 5px}
+  .cust.due{flex-direction:column}
+  .cust.due .act{text-align:left!important;width:100%}
+  .cust.due .act .row{justify-content:flex-start!important}
+}
+.mute{color:var(--mute)}.small{font-size:13px}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+textarea{min-height:90px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.drop{border:2px dashed #c4c9d2;border-radius:12px;padding:28px;text-align:center;background:#fafbfc;cursor:pointer}
+.drop.over{border-color:var(--brand);background:#fff5f5}
+.hide{display:none!important}
+.sm{display:none}
+@media(max-width:600px){.sm{display:block}}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;z-index:20}
+/* tüp kartı */
+.pub{max-width:440px;margin:0 auto}
+.pub .head{background:var(--brand);color:#fff;border-radius:14px 14px 0 0;padding:16px}
+.pub .body{background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:16px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:600}
+.big-status{font-size:18px;font-weight:800;padding:10px 12px;border-radius:10px;margin:8px 0 14px;text-align:center}
+/* etiket baskı */
+.labels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.label{border:1px dashed #999;border-radius:8px;padding:8px;display:flex;gap:8px;align-items:center;background:#fff;break-inside:avoid}
+.label .qr svg,.label .qr img{width:78px;height:78px;display:block}
+.label .t{font-size:11px;line-height:1.3}
+.label .t b{font-size:12px}
+@media print{
+  header,nav,.noprint{display:none!important}
+  body{background:#fff}main{padding:0;max-width:none}
+  .card{border:0;padding:0}
+  .labels{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo"><i>🧯</i>TüpTakip</div>
+    <span class="demo-tag">DEMO — örnek veri</span>
+    <span class="sp"></span>
+    <span class="small mute" id="firmaAdiTop"></span>
+  </div>
+  <nav id="nav">
+    <button data-v="panel" class="on">Panel</button>
+    <button data-v="vade">Vadesi Gelenler</button>
+    <button data-v="musteri">Müşteriler</button>
+    <button data-v="aktar">Excel'den Aktar</button>
+    <button data-v="etiket">QR Etiket</button>
+    <button data-v="ayar">Ayarlar</button>
+  </nav>
+</header>
+<main id="app"></main>
+<div id="toast" class="toast hide"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+"use strict";
+/* ---------- yardımcılar ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const iso = d => { const x = new Date(d); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); };
+const addM = (d, m) => { const x = new Date(d); const day = x.getDate(); x.setDate(1); x.setMonth(x.getMonth()+m); x.setDate(Math.min(day, new Date(x.getFullYear(), x.getMonth()+1, 0).getDate())); return x; };
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const fmt = d => d ? new Date(d).toLocaleDateString("tr-TR", {day:"2-digit", month:"2-digit", year:"numeric"}) : "—";
+const daysTo = d => Math.round((new Date(d) - TODAY) / 864e5);
+function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.remove("hide"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 2200); }
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- ayarlar ---------- */
+const DEF_AYAR = {
+  firma: "Örnek Yangın Söndürme Ltd.",
+  firmaTel: "",
+  kontrolAy: 12, dolumAy: 48, uyariGun: 30,
+  sablon: "Merhaba, {musteri} adresinizdeki {adet} adet yangın söndürme tüpünün {islem} zamanı geldi (vade: {tarih}). Uygun olduğunuz bir gün ekibimizi yönlendirelim mi?\n\n{firma}"
+};
+let AYAR = Object.assign({}, DEF_AYAR, store.get("tt_ayar") || {});
+
+/* ---------- örnek veri (bugüne göre üretilir) ---------- */
+function ornekVeri(){
+  const ilce = ["Kadıköy","Ümraniye","Ataşehir","Maltepe","Beşiktaş","Şişli","Bağcılar","Pendik","Esenyurt","Kartal","Üsküdar","Sarıyer"];
+  const ad = ["Deniz Market","Kardeşler Oto Servis","Yıldız Apartmanı Yönetimi","Lezzet Durağı Restoran","Akın Tekstil Atölyesi","Güneş Eczanesi","Mavi Kafe","Öz Kardeş Mobilya","Nur Kreş","Ekin Lojistik Depo","Park Sitesi B Blok","Çınar Fırın"];
+  const konum = ["Giriş kapısı yanı","Mutfak","Depo","Kazan dairesi","1. kat koridor","Kasa arkası","Otopark","Atölye girişi","Yangın merdiveni","Elektrik panosu yanı"];
+  const tur = [["KKT",6],["KKT",6],["KKT",12],["CO2",5],["KKT",6],["Köpüklü",6],["KKT",2],["CO2",2]];
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const musteriler = ad.map((a, i) => ({ id: "M"+(101+i), ad: a, ilce: ilce[i], tel: "0532 000 00 " + String(10+i), yetkili: "" }));
+  const tupler = []; let n = 1001;
+  musteriler.forEach((m, i) => {
+    const adet = 3 + Math.floor(rnd()*9);
+    // müşteri bazında ortak son kontrol tarihi (gerçek hayatta tüm tüpler aynı gün bakılır)
+    const kayma = Math.floor(rnd()*400);                // son kontrol: bugün ile ~13 ay öncesi arası
+    for (let k = 0; k < adet; k++){
+      const [t, kg] = tur[Math.floor(rnd()*tur.length)];
+      const dolumOnce = Math.floor(rnd()*52);           // ay
+      tupler.push({
+        id: "T-"+(n++), musteriId: m.id, tur: t, kg,
+        seri: "SN" + Math.floor(100000 + rnd()*899999),
+        uretimYil: TODAY.getFullYear() - Math.floor(rnd()*9),
+        konum: konum[Math.floor(rnd()*konum.length)],
+        sonKontrol: iso(addD(TODAY, -kayma - Math.floor(rnd()*3))),
+        sonDolum: iso(addM(TODAY, -dolumOnce)),
+        gecmis: []
+      });
+    }
+  });
+  tupler.forEach(t => t.gecmis = [{ tarih: t.sonKontrol, islem: "Periyodik kontrol", not: "Basınç normal, mühür sağlam" }]);
+  return { musteriler, tupler };
+}
+let DB = store.get("tt_db") || ornekVeri();
+const kaydet = () => { store.set("tt_db", DB); store.set("tt_ayar", AYAR); };
+
+/* ---------- vade hesabı ---------- */
+function vadeler(t){
+  const list = [
+    { islem: "periyodik kontrol", tarih: addM(t.sonKontrol, +AYAR.kontrolAy) },
+    { islem: "dolum", tarih: addM(t.sonDolum, +AYAR.dolumAy) }
+  ];
+  return list.sort((a,b) => a.tarih - b.tarih);
+}
+const ilkVade = t => vadeler(t)[0];
+function durum(d){
+  const g = daysTo(d);
+  if (g < 0) return { k: "late", txt: Math.abs(g) + " gün gecikti", cls: "b-late" };
+  if (g <= +AYAR.uyariGun) return { k: "warn", txt: g === 0 ? "Bugün" : g + " gün kaldı", cls: "b-warn" };
+  if (g <= 60) return { k: "soon", txt: g + " gün kaldı", cls: "b-soon" };
+  return { k: "ok", txt: "Geçerli", cls: "b-ok" };
+}
+const musteri = id => DB.musteriler.find(m => m.id === id);
+const tupleri = mid => DB.tupler.filter(t => t.musteriId === mid);
+
+/* WhatsApp mesajı: müşteri başına TEK mesaj */
+function waLink(m, ts){
+  const v = ts.map(ilkVade).sort((a,b) => a.tarih - b.tarih)[0];
+  const islemler = [...new Set(ts.map(t => ilkVade(t).islem))].join(" / ");
+  const msg = AYAR.sablon
+    .replaceAll("{musteri}", m.ad).replaceAll("{adet}", ts.length)
+    .replaceAll("{islem}", islemler).replaceAll("{tarih}", fmt(v.tarih)).replaceAll("{firma}", AYAR.firma);
+  const tel = (m.tel || "").replace(/\D/g, "").replace(/^0/, "90");
+  // Demo numaraları gerçek değil; demoda numarasız açılır, kişi WhatsApp'ta seçilir.
+  const gercek = tel.length === 12 && !/^90532000/.test(tel);
+  return (gercek ? "https://wa.me/" + tel : "https://wa.me/") + "?text=" + encodeURIComponent(msg);
+}
+const tupUrl = id => location.href.split("#")[0] + "#tup/" + encodeURIComponent(id);
+function qrSvg(text, cell){
+  if (typeof qrcode !== "function") return '<div class="small mute">QR yüklenemedi</div>';
+  const q = qrcode(0, "M"); q.addData(text); q.make(); return q.createSvgTag({ cellSize: cell || 3, margin: 1 });
+}
+
+/* ---------- görünümler ---------- */
+const V = {};
+V.panel = () => {
+  const all = DB.tupler.map(t => ({ t, v: ilkVade(t), d: durum(ilkVade(t).tarih) }));
+  const late = all.filter(x => x.d.k === "late"), warn = all.filter(x => x.d.k === "warn");
+  const ayGelir = new Set([...late, ...warn].map(x => x.t.musteriId)).size;
+  const next = all.filter(x => x.d.k !== "ok").sort((a,b) => a.v.tarih - b.v.tarih).slice(0, 8);
+  return `
+  <h1>Günaydın 👋</h1><p class="sub">${esc(AYAR.firma)} — ${fmt(TODAY)}</p>
+  <div class="grid kpis">
+    <div class="card kpi late"><b>${late.length}</b><span>Vadesi geçmiş tüp</span></div>
+    <div class="card kpi warn"><b>${warn.length}</b><span>${AYAR.uyariGun} gün içinde vadesi gelen</span></div>
+    <div class="card kpi"><b>${ayGelir}</b><span>Aranacak müşteri</span></div>
+    <div class="card kpi"><b>${DB.tupler.length}</b><span>Takipteki tüp · ${DB.musteriler.length} müşteri</span></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="row"><h2 style="margin:0">Sıradaki işler</h2><span class="sp"></span><button class="btn s" onclick="go('vade')">Tümü →</button></div>
+    <div class="tw"><table><thead><tr><th>Tüp</th><th>Müşteri</th><th class="hm">İşlem</th><th>Vade</th><th>Durum</th></tr></thead><tbody>
+    ${next.map(x => `<tr><td><a href="#tup/${esc(x.t.id)}">${esc(x.t.id)}</a><div class="small mute">${esc(x.t.tur)} ${x.t.kg} kg</div></td>
+      <td>${esc(musteri(x.t.musteriId)?.ad)}</td><td class="hm">${esc(x.v.islem)}</td><td>${fmt(x.v.tarih)}<div class="small mute sm">${esc(x.v.islem)}</div></td>
+      <td><span class="badge ${x.d.cls}">${x.d.txt}</span></td></tr>`).join("") || `<tr><td colspan="5" class="mute">Vadesi yaklaşan tüp yok.</td></tr>`}
+    </tbody></table></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2>Nasıl çalışır?</h2>
+    <ol class="small" style="margin:0;padding-left:18px">
+      <li>Excel'deki müşteri ve tüp listenizi <b>Excel'den Aktar</b> ile yükleyin.</li>
+      <li>Her tüpe <b>QR etiket</b> basın; müşteri okutunca tüpün durumunu görür.</li>
+      <li>Vadesi gelen müşterilere <b>Vadesi Gelenler</b> sayfasından tek tıkla WhatsApp hatırlatması gönderin.</li>
+      <li>Bakım yapınca <b>Kontrol yapıldı</b> deyin; yeni vade kendiliğinden hesaplanır.</li>
+    </ol>
+  </div>`;
+};
+
+V.vade = () => {
+  const gruplar = DB.musteriler.map(m => {
+    const ts = tupleri(m.id).filter(t => durum(ilkVade(t).tarih).k !== "ok");
+    if (!ts.length) return null;
+    const enYakin = ts.map(t => ilkVade(t).tarih).sort((a,b) => a-b)[0];
+    return { m, ts, enYakin, d: durum(enYakin) };
+  }).filter(Boolean).sort((a,b) => a.enYakin - b.enYakin);
+  return `
+  <h1>Vadesi Gelenler</h1><p class="sub">Müşteri başına tek hatırlatma. Mesaj metnini Ayarlar'dan değiştirebilirsiniz.</p>
+  <div class="card">
+  ${gruplar.map(g => `<div class="cust due">
+      <div class="info"><b>${esc(g.m.ad)}</b>
+        <div class="small mute">${esc(g.m.ilce)} · ${esc(g.m.tel)} · ${g.ts.length} tüp</div>
+        <div class="small" style="margin-top:4px">${g.ts.map(t => `${esc(t.id)} (${esc(ilkVade(t).islem)})`).join(", ")}</div>
+      </div>
+      <div class="act" style="text-align:right">
+        <span class="badge ${g.d.cls}">${g.d.txt}</span>
+        <div class="row" style="margin-top:8px;justify-content:flex-end">
+          <a class="btn wa s" target="_blank" rel="noopener" href="${waLink(g.m, g.ts)}">WhatsApp hatırlat</a>
+          <button class="btn s" onclick="kontrolYap('${g.m.id}')">Kontrol yapıldı</button>
+        </div>
+      </div>
+    </div>`).join("") || '<p class="mute">Vadesi yaklaşan müşteri yok. 🎉</p>'}
+  </div>`;
+};
+
+let acikMusteri = null;
+V.musteri = () => {
+  const m = acikMusteri && musteri(acikMusteri);
+  if (m){
+    const ts = tupleri(m.id);
+    return `
+    <div class="row noprint"><button class="btn s" onclick="acikMusteri=null;render()">← Müşteriler</button><span class="sp"></span>
+      <button class="btn s" onclick="go('etiket','${m.id}')">QR etiket bas</button>
+      <a class="btn wa s" target="_blank" rel="noopener" href="${waLink(m, ts)}">WhatsApp</a></div>
+    <h1 style="margin-top:12px">${esc(m.ad)}</h1><p class="sub">${esc(m.ilce)} · ${esc(m.tel)} · ${ts.length} tüp</p>
+    <div class="card tw"><table><thead><tr><th>Tüp</th><th>Konum</th><th>Son kontrol</th><th>Son dolum</th><th>Sıradaki</th><th>Durum</th></tr></thead><tbody>
+    ${ts.map(t => { const v = ilkVade(t), d = durum(v.tarih); return `<tr>
+      <td><a href="#tup/${esc(t.id)}">${esc(t.id)}</a><div class="small mute">${esc(t.tur)} ${t.kg} kg · ${esc(t.seri)}</div></td>
+      <td>${esc(t.konum)}</td><td>${fmt(t.sonKontrol)}</td><td>${fmt(t.sonDolum)}</td>
+      <td>${esc(v.islem)}<div class="small mute">${fmt(v.tarih)}</div></td><td><span class="badge ${d.cls}">${d.txt}</span></td></tr>`; }).join("")}
+    </tbody></table></div>`;
+  }
+  return `
+  <h1>Müşteriler</h1><p class="sub">${DB.musteriler.length} müşteri, ${DB.tupler.length} tüp</p>
+  <input id="ara" placeholder="Müşteri ara…" oninput="musteriFiltre(this.value)" style="margin-bottom:12px">
+  <div class="card" id="mliste">${musteriSatirlari("")}</div>`;
+};
+function musteriSatirlari(q){
+  q = q.toLocaleLowerCase("tr");
+  return DB.musteriler.filter(m => !q || m.ad.toLocaleLowerCase("tr").includes(q) || (m.ilce||"").toLocaleLowerCase("tr").includes(q)).map(m => {
+    const ts = tupleri(m.id); const geciken = ts.filter(t => durum(ilkVade(t).tarih).k === "late").length;
+    const yakin = ts.filter(t => durum(ilkVade(t).tarih).k === "warn").length;
+    return `<div class="cust" style="cursor:pointer" onclick="acikMusteri='${m.id}';render()">
+      <div class="info"><b>${esc(m.ad)}</b><div class="small mute">${esc(m.ilce)} · ${ts.length} tüp</div></div>
+      ${geciken ? `<span class="badge b-late">${geciken} gecikmiş</span>` : yakin ? `<span class="badge b-warn">${yakin} yaklaşan</span>` : `<span class="badge b-ok">Tamam</span>`}
+    </div>`; }).join("") || '<p class="mute">Sonuç yok.</p>';
+}
+window.musteriFiltre = q => { $("#mliste").innerHTML = musteriSatirlari(q); };
+
+/* Excel içe aktarma — dosya tarayıcıdan çıkmaz */
+let onizleme = null;
+V.aktar = () => `
+  <h1>Excel'den Aktar</h1>
+  <p class="sub">Elinizdeki listeyi olduğu gibi bırakın. Sütun adlarını sistem tanır; dosya bu demoda bilgisayarınızdan dışarı gönderilmez.</p>
+  <div class="card">
+    <div class="drop" id="drop" onclick="$('#dosya').click()">
+      <b>Excel dosyasını buraya bırakın</b><div class="small mute">ya da tıklayıp seçin (.xlsx, .xls, .csv)</div>
+    </div>
+    <input type="file" id="dosya" accept=".xlsx,.xls,.csv" class="hide">
+    <div class="row" style="margin-top:10px"><span class="small mute">Elinizde hazır dosya yok mu?</span>
+      <button class="btn s" onclick="ornekExcel()">Örnek Excel indir</button></div>
+    <div id="onz" style="margin-top:14px"></div>
+  </div>`;
+const ESLE = {
+  musteri: ["müşteri","musteri","firma","işyeri","isyeri","unvan","ünvan","müşteri adı","cari"],
+  tel: ["telefon","tel","gsm","cep","whatsapp"],
+  ilce: ["ilçe","ilce","semt","adres","bölge"],
+  tur: ["tür","tur","cins","tip","tüp türü","söndürücü"],
+  kg: ["kg","kilo","ağırlık","agirlik","kapasite"],
+  seri: ["seri","seri no","seri numarası","sn","tüp no","barkod"],
+  konum: ["konum","yer","bulunduğu yer","lokasyon"],
+  sonKontrol: ["son kontrol","kontrol tarihi","bakım tarihi","son bakım","kontrol"],
+  sonDolum: ["son dolum","dolum tarihi","dolum"]
+};
+function sutunBul(basliklar){
+  const norm = s => String(s).toLocaleLowerCase("tr").trim();
+  const sonuc = {};
+  for (const [alan, adlar] of Object.entries(ESLE)){
+    const i = basliklar.findIndex(b => adlar.includes(norm(b))) ;
+    const j = i >= 0 ? i : basliklar.findIndex(b => adlar.some(a => norm(b).includes(a)));
+    if (j >= 0 && !Object.values(sonuc).includes(j)) sonuc[alan] = j;
+  }
+  return sonuc;
+}
+function tarihCoz(v){
+  if (v == null || v === "") return null;
+  if (v instanceof Date) return iso(v);
+  if (typeof v === "number") return iso(new Date(Math.round((v - 25569) * 864e5)));
+  const m = String(v).trim().match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+  if (m){ const y = m[3].length === 2 ? "20"+m[3] : m[3]; return iso(new Date(+y, +m[2]-1, +m[1])); }
+  const d = new Date(v); return isNaN(d) ? null : iso(d);
+}
+function dosyaOku(f){
+  if (typeof XLSX === "undefined"){ toast("Excel okuyucu yüklenemedi"); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array", cellDates: true });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: "" }).filter(r => r.some(c => c !== ""));
+      if (rows.length < 2){ toast("Dosyada satır bulunamadı"); return; }
+      const bas = rows[0], es = sutunBul(bas);
+      const kayit = rows.slice(1).map(r => ({
+        musteri: es.musteri != null ? String(r[es.musteri]).trim() : "",
+        tel: es.tel != null ? String(r[es.tel]).trim() : "",
+        ilce: es.ilce != null ? String(r[es.ilce]).trim() : "",
+        tur: es.tur != null ? String(r[es.tur]).trim() || "KKT" : "KKT",
+        kg: es.kg != null ? parseFloat(String(r[es.kg]).replace(",", ".")) || "" : "",
+        seri: es.seri != null ? String(r[es.seri]).trim() : "",
+        konum: es.konum != null ? String(r[es.konum]).trim() : "",
+        sonKontrol: es.sonKontrol != null ? tarihCoz(r[es.sonKontrol]) : null,
+        sonDolum: es.sonDolum != null ? tarihCoz(r[es.sonDolum]) : null
+      })).filter(k => k.musteri);
+      onizleme = kayit;
+      const tanin = Object.keys(es).map(k => `<span class="badge b-ok">${esc(bas[es[k]])} → ${k}</span>`).join(" ");
+      const eksik = Object.keys(ESLE).filter(k => es[k] == null).map(k => `<span class="badge b-warn">${k}</span>`).join(" ");
+      $("#onz").innerHTML = `
+        <p><b>${kayit.length}</b> tüp, <b>${new Set(kayit.map(k => k.musteri)).size}</b> müşteri bulundu.</p>
+        <p class="small">Tanınan sütunlar: ${tanin || "—"}</p>
+        ${eksik ? `<p class="small">Bulunamayan: ${eksik} <span class="mute">(boş bırakılır, sonra doldurulur)</span></p>` : ""}
+        <div class="tw"><table><thead><tr><th>Müşteri</th><th>Tür</th><th>Seri</th><th>Son kontrol</th><th>Son dolum</th></tr></thead><tbody>
+        ${kayit.slice(0, 8).map(k => `<tr><td>${esc(k.musteri)}</td><td>${esc(k.tur)} ${esc(k.kg)}</td><td>${esc(k.seri)}</td><td>${fmt(k.sonKontrol)}</td><td>${fmt(k.sonDolum)}</td></tr>`).join("")}
+        </tbody></table></div>
+        ${kayit.length > 8 ? `<p class="small mute">… ve ${kayit.length - 8} satır daha</p>` : ""}
+        <div class="row" style="margin-top:10px"><button class="btn p" onclick="aktarOnayla(false)">Mevcut listeye ekle</button>
+          <button class="btn" onclick="aktarOnayla(true)">Örnek veriyi sil, yalnız benimkiler</button></div>`;
+    } catch (err){ toast("Dosya okunamadı"); }
+  };
+  r.readAsArrayBuffer(f);
+}
+window.aktarOnayla = sifirla => {
+  if (!onizleme) return;
+  if (sifirla) DB = { musteriler: [], tupler: [] };
+  let mn = 1 + DB.musteriler.length, tn = 1 + DB.tupler.length;
+  onizleme.forEach(k => {
+    let m = DB.musteriler.find(x => x.ad.toLocaleLowerCase("tr") === k.musteri.toLocaleLowerCase("tr"));
+    if (!m){ m = { id: "M"+(500+mn++), ad: k.musteri, ilce: k.ilce, tel: k.tel, yetkili: "" }; DB.musteriler.push(m); }
+    const sk = k.sonKontrol || iso(TODAY);
+    DB.tupler.push({ id: "T-"+(5000+tn++), musteriId: m.id, tur: k.tur, kg: k.kg || "", seri: k.seri || "—", uretimYil: "",
+      konum: k.konum || "—", sonKontrol: sk, sonDolum: k.sonDolum || sk, gecmis: [{ tarih: sk, islem: "Excel'den aktarıldı", not: "" }] });
+  });
+  const n = onizleme.length; onizleme = null; kaydet(); toast(n + " tüp aktarıldı"); go("vade");
+};
+window.ornekExcel = () => {
+  if (typeof XLSX === "undefined"){ toast("Excel yazıcı yüklenemedi"); return; }
+  const rows = [["Müşteri","Telefon","İlçe","Tür","Kg","Seri No","Konum","Son Kontrol","Son Dolum"]];
+  DB.tupler.slice(0, 25).forEach(t => { const m = musteri(t.musteriId);
+    rows.push([m.ad, m.tel, m.ilce, t.tur, t.kg, t.seri, t.konum, fmt(t.sonKontrol), fmt(t.sonDolum)]); });
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Tüpler");
+  XLSX.writeFile(wb, "ornek-tup-listesi.xlsx");
+};
+
+/* QR etiket sayfası */
+let etiketMusteri = null;
+V.etiket = () => {
+  const mid = etiketMusteri || DB.musteriler[0]?.id;
+  const ts = mid ? tupleri(mid) : [];
+  return `
+  <div class="noprint">
+    <h1>QR Etiket</h1><p class="sub">A4 etiket kâğıdına basın, tüpün üzerine yapıştırın. Müşteri telefonla okutunca tüpün durumunu görür.</p>
+    <div class="row" style="margin-bottom:12px">
+      <select onchange="etiketMusteri=this.value;render()" style="max-width:320px">
+        ${DB.musteriler.map(m => `<option value="${m.id}" ${m.id === mid ? "selected" : ""}>${esc(m.ad)} (${tupleri(m.id).length})</option>`).join("")}
+      </select>
+      <button class="btn p" onclick="window.print()">Yazdır</button>
+    </div>
+  </div>
+  <div class="card"><div class="labels">
+  ${ts.map(t => `<div class="label"><div class="qr">${qrSvg(tupUrl(t.id), 2)}</div>
+    <div class="t"><b>${esc(t.id)}</b><br>${esc(t.tur)} ${t.kg} kg<br>${esc(musteri(t.musteriId)?.ad)}<br>
+    <span class="mute">${esc(AYAR.firma)}</span></div></div>`).join("") || '<p class="mute">Tüp yok.</p>'}
+  </div></div>`;
+};
+
+V.ayar = () => `
+  <h1>Ayarlar</h1><p class="sub">Vade kurallarını firmanız belirler. Aşağıdakiler örnek değerlerdir.</p>
+  <div class="two">
+    <div class="card">
+      <h2>Firma</h2>
+      <label>Firma adı</label><input id="a_firma" value="${esc(AYAR.firma)}">
+      <label>Firma WhatsApp numarası (müşteri tüp kartından size yazar)</label><input id="a_tel" value="${esc(AYAR.firmaTel)}" placeholder="05xx xxx xx xx">
+      <h2 style="margin-top:16px">Vade kuralları</h2>
+      <div class="two">
+        <div><label>Periyodik kontrol (ay)</label><input id="a_k" type="number" min="1" value="${AYAR.kontrolAy}"></div>
+        <div><label>Dolum (ay)</label><input id="a_d" type="number" min="1" value="${AYAR.dolumAy}"></div>
+      </div>
+      <label>Kaç gün önceden uyarılsın</label><input id="a_u" type="number" min="1" value="${AYAR.uyariGun}">
+    </div>
+    <div class="card">
+      <h2>WhatsApp hatırlatma metni</h2>
+      <p class="small mute">Kullanılabilir alanlar: {musteri} {adet} {islem} {tarih} {firma}</p>
+      <textarea id="a_s" rows="8">${esc(AYAR.sablon)}</textarea>
+      <div class="row" style="margin-top:12px"><button class="btn p" onclick="ayarKaydet()">Kaydet</button>
+        <span class="sp"></span><button class="btn s" onclick="sifirla()">Demo verisini sıfırla</button></div>
+    </div>
+  </div>`;
+window.ayarKaydet = () => {
+  AYAR.firma = $("#a_firma").value.trim() || DEF_AYAR.firma; AYAR.firmaTel = $("#a_tel").value.trim();
+  AYAR.kontrolAy = Math.max(1, +$("#a_k").value || 12); AYAR.dolumAy = Math.max(1, +$("#a_d").value || 48);
+  AYAR.uyariGun = Math.max(1, +$("#a_u").value || 30); AYAR.sablon = $("#a_s").value || DEF_AYAR.sablon;
+  kaydet(); toast("Kaydedildi"); render();
+};
+window.sifirla = () => { DB = ornekVeri(); AYAR = Object.assign({}, DEF_AYAR); kaydet(); toast("Demo sıfırlandı"); go("panel"); };
+
+window.kontrolYap = mid => {
+  tupleri(mid).forEach(t => {
+    if (durum(ilkVade(t).tarih).k === "ok") return;
+    const v = ilkVade(t);
+    t.sonKontrol = iso(TODAY);
+    if (v.islem === "dolum") t.sonDolum = iso(TODAY);
+    t.gecmis.unshift({ tarih: iso(TODAY), islem: v.islem === "dolum" ? "Dolum + kontrol" : "Periyodik kontrol", not: "Sahada işaretlendi" });
+  });
+  kaydet(); toast("Kaydedildi, yeni vadeler hesaplandı"); render();
+};
+
+/* Müşterinin QR'dan gördüğü tüp kartı */
+function tupKarti(id){
+  const t = DB.tupler.find(x => x.id === id);
+  if (!t) return `<div class="pub"><div class="card">Bu tüp bulunamadı. <a href="#">Panele dön</a></div></div>`;
+  const m = musteri(t.musteriId), vs = vadeler(t), d = durum(vs[0].tarih);
+  const renk = { late: "var(--late-bg);color:var(--late)", warn: "var(--warn-bg);color:var(--warn)", soon: "var(--soon-bg);color:var(--soon)", ok: "var(--ok-bg);color:var(--ok)" }[d.k];
+  const baslik = { late: "⚠️ Bakım zamanı geçti", warn: "⏳ Bakım zamanı yaklaşıyor", soon: "✅ Kullanıma uygun", ok: "✅ Kullanıma uygun" }[d.k];
+  const ftel = (AYAR.firmaTel || "").replace(/\D/g, "").replace(/^0/, "90");
+  const servisMsg = encodeURIComponent(`Merhaba, ${m?.ad || ""} adresindeki ${t.id} numaralı tüp için servis rica ediyorum.`);
+  const servis = (ftel.length === 12 ? "https://wa.me/" + ftel : "https://wa.me/") + "?text=" + servisMsg;
+  return `
+  <div class="pub">
+    <p class="noprint small"><a href="#">← Firma paneline dön (demo)</a></p>
+    <div class="head"><div class="small" style="opacity:.85">${esc(AYAR.firma)}</div><div style="font-size:20px;font-weight:800">Tüp ${esc(t.id)}</div>
+      <div class="small">${esc(m?.ad)} · ${esc(t.konum)}</div></div>
+    <div class="body">
+      <div class="big-status" style="background:${renk}">${baslik}</div>
+      <dl class="kv">
+        <dt>Tür</dt><dd>${esc(t.tur)} ${t.kg} kg</dd>
+        <dt>Seri no</dt><dd>${esc(t.seri)}</dd>
+        <dt>Son kontrol</dt><dd>${fmt(t.sonKontrol)}</dd>
+        <dt>Son dolum</dt><dd>${fmt(t.sonDolum)}</dd>
+        ${vs.map(v => `<dt>Sonraki ${esc(v.islem)}</dt><dd>${fmt(v.tarih)}</dd>`).join("")}
+      </dl>
+      <a class="btn wa" style="width:100%;justify-content:center;margin-top:16px" target="_blank" rel="noopener" href="${servis}">Servis iste (WhatsApp)</a>
+      <h2 style="margin-top:18px">Servis geçmişi</h2>
+      ${(t.gecmis || []).map(g => `<div class="small" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${fmt(g.tarih)}</b> — ${esc(g.islem)}${g.not ? ` <span class="mute">· ${esc(g.not)}</span>` : ""}</div>`).join("")}
+      <div style="text-align:center;margin-top:16px">${qrSvg(tupUrl(t.id), 3)}<div class="small mute">Bu sayfanın QR kodu</div></div>
+    </div>
+  </div>`;
+}
+
+/* ---------- yönlendirme ---------- */
+let gorunum = "panel";
+window.go = (v, arg) => { if (v === "etiket" && arg) etiketMusteri = arg; gorunum = v; if (location.hash) history.pushState("", "", location.pathname + location.search); render(); scrollTo(0, 0); };
+function render(){
+  $("#firmaAdiTop").textContent = AYAR.firma;
+  const h = decodeURIComponent(location.hash || "");
+  const nav = $("#nav");
+  if (h.startsWith("#tup/")){ nav.classList.add("hide"); $("#app").innerHTML = tupKarti(h.slice(5)); return; }
+  nav.classList.remove("hide");
+  nav.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === gorunum));
+  $("#app").innerHTML = V[gorunum]();
+  if (gorunum === "aktar"){
+    const dr = $("#drop"), inp = $("#dosya");
+    inp.onchange = () => inp.files[0] && dosyaOku(inp.files[0]);
+    dr.ondragover = e => { e.preventDefault(); dr.classList.add("over"); };
+    dr.ondragleave = () => dr.classList.remove("over");
+    dr.ondrop = e => { e.preventDefault(); dr.classList.remove("over"); e.dataTransfer.files[0] && dosyaOku(e.dataTransfer.files[0]); };
+  }
+}
+$("#nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(b.dataset.v); });
+addEventListener("hashchange", render);
+render();
+</script>
+</body>
+</html>
